@@ -1,0 +1,16 @@
+{
+    "configurations": [
+        {
+            "command": "npm run debug",
+            "name": "debug service",
+            "request": "launch",
+            "type": "node-terminal",
+            "cwd": "${workspaceFolder}/packages/service",
+            "env": {
+                //"https_proxy": "http://127.0.0.1:8866",
+                //"http_proxy": "http://127.0.0.1:8866",
+                //"NODE_TLS_REJECT_UNAUTHORIZED": "0"
+            }
+        }
+    ]
+}
