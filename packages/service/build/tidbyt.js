@@ -8,19 +8,34 @@ const axios_1 = __importDefault(require("axios"));
 const env_1 = require("./env");
 const worker_1 = require("./worker");
 const fs_1 = __importDefault(require("fs"));
-const REFRESH_INTERVAL_MS = 15 * 1000;
+const REFRESH_INTERVAL_MS = 20 * 1000;
 let prevWebp;
-async function updateTidbytAsync() {
+async function generateStationImageAsync(stationId) {
     try {
         const renderExitCode = await (0, worker_1.spawnAsync)(`pixlet`, [
             "render",
             "./tidbyt/tides-today.star",
+            "-o",
+            `./tidbyt/tides-today-${stationId}.webp`,
+            `stationId=${stationId}`,
+        ]);
+    }
+    catch (e) {
+        console.error(`Station image update failed: ${e.toString()}`);
+    }
+}
+async function updateStationImagesAsync() { }
+async function updateTidbytsAsync() {
+    try {
+        const renderExitCode = await (0, worker_1.spawnAsync)(`pixlet`, [
+            "render",
+            "./tidbyt/ferry-status.star",
         ]);
         if (renderExitCode) {
             console.error(`pixlet render exited with code ${renderExitCode}`);
         }
         else {
-            const webp = fs_1.default.readFileSync("./tidbyt/tides-today.webp", "base64");
+            const webp = fs_1.default.readFileSync("./tidbyt/ferry-status.webp", "base64");
             if (prevWebp !== webp) {
                 prevWebp = webp;
                 const data = {
@@ -46,10 +61,11 @@ async function updateTidbytAsync() {
     catch (err) {
         console.error(`Tidbyt update failed: ${err.toString()}`);
     }
-    setTimeout(async () => await updateTidbytAsync(), REFRESH_INTERVAL_MS);
+    setTimeout(async () => await updateTidbytsAsync(), REFRESH_INTERVAL_MS);
 }
 async function startAsync() {
-    await updateTidbytAsync();
+    // Short delay before initial update
+    //setTimeout(async () => await updateTidbytsAsync(), 1000);
 }
 exports.startAsync = startAsync;
 //# sourceMappingURL=tidbyt.js.map

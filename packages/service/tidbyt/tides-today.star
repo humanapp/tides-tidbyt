@@ -5,4 +5,7 @@ load("encoding/base64.star", "base64")
 load("math.star", "math")
 
 def main(config):
-    return render.Root()
+    print(config["this"])
+    return render.Root(
+        child = render.Text("hi")
+    )
