@@ -29,6 +29,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const process_1 = __importDefault(require("process"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const env = __importStar(require("./env"));
+const stations = __importStar(require("./stations"));
+const tides = __importStar(require("./tides"));
 const rest = __importStar(require("./rest"));
 const tidbyt = __importStar(require("./tidbyt"));
 const server = __importStar(require("./server"));
@@ -42,10 +44,14 @@ process_1.default
 });
 async function initAsync() {
     await env.initAsync();
+    await stations.initAsync();
+    await tides.initAsync();
     await rest.initAsync();
 }
 async function startAsync() {
     await env.startAsync();
+    await stations.startAsync();
+    await tides.startAsync();
     await tidbyt.startAsync();
     await server.startAsync();
 }

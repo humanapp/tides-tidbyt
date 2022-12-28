@@ -17,10 +17,7 @@ async function updateTidbytAsync() {
         if (renderExitCode) {
             console.error(`pixlet render exited with code ${renderExitCode}`);
         } else {
-            const webp = fs.readFileSync(
-                "./tidbyt/tides-today.webp",
-                "base64"
-            );
+            const webp = fs.readFileSync("./tidbyt/tides-today.webp", "base64");
             if (prevWebp !== webp) {
                 prevWebp = webp;
 
