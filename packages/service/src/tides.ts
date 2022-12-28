@@ -7,7 +7,7 @@ import { TidbytDevice, TidePredictions } from "./types";
 const REFRESH_INTERVAL_MS = 15 * 1000;
 
 const TIDE_PREDICTION_URI = (
-    station: string,
+    stationId: string,
     begin_date: DateTime,
     end_date: DateTime
 ): string => {
@@ -15,7 +15,7 @@ const TIDE_PREDICTION_URI = (
         "yyyyLLdd"
     )}&end_date=${end_date.toFormat(
         "yyyyLLdd"
-    )}&station=${station}&product=predictions&datum=MLLW&time_zone=gmt&units=english&application=humanapp.tides&format=json&interval=hilo`;
+    )}&station=${stationId}&product=predictions&datum=MLLW&time_zone=gmt&units=english&application=humanapp.tides&format=json&interval=hilo`;
 };
 
 type CachedPrediction = {
@@ -27,53 +27,43 @@ let cachedPredictions: {
     [station: string]: CachedPrediction;
 } = {};
 
-async function refreshTidesAsync() {
+export async function fetchTidesForStationAsync(
+    stationId: string
+): Promise<TidePredictions | undefined> {
     try {
-        const devices = env.getSetting("TIDBYTS") as TidbytDevice[];
-        const stationSet = new Set<string>();
-        devices.forEach((d) => stationSet.add(d.tideStation));
-
-        // Clear removed stations
-        let oldKeys = Object.keys(cachedPredictions).filter(
-            (k) => !stationSet.has(k)
-        );
-        for (const oldKey of oldKeys) {
-            delete cachedPredictions[oldKey];
-        }
-
-        // Query three days of data, with current day in the middle
         const today = DateTime.utc();
-        const yesterday = today.minus({ days: 1 });
-        const tomorrow = today.plus({ days: 1 });
 
-        // Delete stale station data
-        for (const station of stationSet) {
-            const cached = cachedPredictions[station];
-            if (cached && cached.date !== today.toLocaleString()) {
-                delete cachedPredictions[station];
-            }
+        // Delete stale cached data
+        if (
+            cachedPredictions[stationId] &&
+            cachedPredictions[stationId].date !== today.toLocaleString()
+        ) {
+            delete cachedPredictions[stationId];
         }
 
-        // Update station data
-        for (const station of stationSet) {
-            if (!cachedPredictions[station]) {
-                const smeta = await stations.getStationMetadata(station);
-                if (!smeta)
-                    throw new Error(
-                        `Failed to fetch station ${station} metadata.`
-                    );
+        if (!cachedPredictions[stationId]) {
+            const smeta = await stations.getStationMetadata(stationId);
+            if (!smeta)
+                throw new Error(
+                    `Failed to fetch station ${stationId} metadata.`
+                );
 
-                const uri = TIDE_PREDICTION_URI(station, yesterday, tomorrow);
-                const res = await axios.get(uri);
-                const data = res.data as TidePredictions;
-                const pred: CachedPrediction = {
-                    date: today.toLocaleString(),
-                    data,
-                };
-                cachedPredictions[station] = pred;
-                console.debug(`Updated tides for station ${station}`);
-            }
+            // Query three days of data, with current day in the middle
+            const yesterday = today.minus({ days: 1 });
+            const tomorrow = today.plus({ days: 1 });
+
+            const uri = TIDE_PREDICTION_URI(stationId, yesterday, tomorrow);
+            const res = await axios.get(uri);
+            const data = res.data as TidePredictions;
+            const pred: CachedPrediction = {
+                date: today.toLocaleString(),
+                data,
+            };
+            cachedPredictions[stationId] = pred;
+            console.debug(`Updated tides for station ${stationId}`);
         }
+
+        return cachedPredictions[stationId]?.data;
     } catch (e: any) {
         if (e instanceof AxiosError && e.response?.data)
             console.error(
@@ -84,13 +74,10 @@ async function refreshTidesAsync() {
                 )}`
             );
         else console.error(`Tides update failed: ${e.toString()}`);
-    } finally {
-        setTimeout(async () => await refreshTidesAsync(), REFRESH_INTERVAL_MS);
+        return undefined;
     }
 }
 
 export async function initAsync() {}
 
-export async function startAsync() {
-    await refreshTidesAsync();
-}
+export async function startAsync() {}

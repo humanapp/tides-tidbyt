@@ -25,19 +25,19 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.startAsync = exports.initAsync = exports.getStationMetadata = void 0;
 const axios_1 = __importStar(require("axios"));
-const STATION_METADATA_API = (station) => `https://api.tidesandcurrents.noaa.gov/mdapi/prod/webapi/stations/${station}.json?type=waterlevels&units=english`;
+const STATION_METADATA_API = (stationId) => `https://api.tidesandcurrents.noaa.gov/mdapi/prod/webapi/stations/${stationId}.json?type=waterlevels&units=english`;
 const cachedStations = {};
-async function getStationMetadata(station) {
+async function getStationMetadata(stationId) {
     var _a;
     try {
-        if (cachedStations[station]) {
-            return cachedStations[station];
+        if (cachedStations[stationId]) {
+            return cachedStations[stationId];
         }
-        const uri = STATION_METADATA_API(station);
+        const uri = STATION_METADATA_API(stationId);
         const res = await axios_1.default.get(uri);
         const data = res.data;
-        cachedStations[station] = data;
-        console.debug(`Fetched metadata for station ${station}`);
+        cachedStations[stationId] = data;
+        console.debug(`Fetched metadata for station ${stationId}`);
         return data;
     }
     catch (e) {

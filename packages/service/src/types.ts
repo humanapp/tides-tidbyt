@@ -15,7 +15,7 @@ export type TidePredictions = {
 };
 
 export type TidbytDevice = {
-    tideStation: string; // NOAA station id (for tide preditions)
+    stationId: string; // NOAA station id (for tide preditions)
     deviceId: string; // Tidbyt deviceId
     apiKey: string; // Tidbyt apiKey
 };
